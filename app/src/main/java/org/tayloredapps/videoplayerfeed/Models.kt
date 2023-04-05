@@ -2,7 +2,7 @@ package org.tayloredapps.videoplayerfeed
 
 import android.net.Uri
 import android.util.Log
-import androidx.media3.exoplayer.ExoPlayer
+import com.google.android.exoplayer2.ExoPlayer
 
 enum class VideoType {
     HLS, MP4

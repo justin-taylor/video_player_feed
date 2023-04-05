@@ -1,19 +1,16 @@
 package org.tayloredapps.videoplayerfeed
 
 import android.content.Context
-import android.util.Log
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.database.StandaloneDatabaseProvider
-import androidx.media3.datasource.DataSource
-import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.datasource.cache.CacheDataSource
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
-import androidx.media3.datasource.cache.SimpleCache
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.exoplayer.source.BaseMediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.source.BaseMediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource
+import com.google.android.exoplayer2.upstream.cache.SimpleCache
+
 
 class ExoplayerFactory(var context: Context) {
 
