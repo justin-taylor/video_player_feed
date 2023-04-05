@@ -33,17 +33,25 @@ class MainActivity : AppCompatActivity() {
                 exoPlayerItems.add(exoPlayerItem)
             }
         }, ExoplayerFactory(this))
-
+        binding.videoList.offscreenPageLimit = 2
         binding.videoList.adapter = adapter
-
         binding.videoList.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
+                /*
                 val previousIndex = exoPlayerItems.indexOfFirst { it.exoPlayer.isPlaying }
                 if (previousIndex != -1) {
                     val player = exoPlayerItems[previousIndex].exoPlayer
                     player.pause()
                     player.playWhenReady = false
                 }
+                */
+
+                exoPlayerItems.forEach {
+                    val player = it.exoPlayer
+                    player.pause()
+                    player.playWhenReady = false
+                }
+
                 val newIndex = exoPlayerItems.indexOfFirst { it.position == position }
                 if (newIndex != -1) {
                     val player = exoPlayerItems[newIndex].exoPlayer
