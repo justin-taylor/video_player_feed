@@ -4,6 +4,10 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import androidx.viewpager2.widget.ViewPager2
 import org.tayloredapps.videoplayerfeed.databinding.ActivityMainBinding
 
@@ -14,6 +18,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: VideoAdapter
     private val exoPlayerItems = ArrayList<ExoPlayerItem>()
+
+
 
     @SuppressLint("MissingSuperCall")
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -28,24 +34,20 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         videos = GetVideoList()
 
+        val dataSourceFactory = DefaultHttpDataSource.Factory()
+        val cacheSize: Long = 90 * 1024 * 1024
+        val cacheEvictor = LeastRecentlyUsedCacheEvictor(cacheSize)
+        val exoplayerDatabaseProvider = StandaloneDatabaseProvider(this)
+        val cache = SimpleCache(cacheDir, cacheEvictor, exoplayerDatabaseProvider)
+
         adapter = VideoAdapter(this, videos, object : VideoAdapter.OnVideoPreparedListener {
             override fun onVideoPrepared(exoPlayerItem: ExoPlayerItem) {
                 exoPlayerItems.add(exoPlayerItem)
             }
-        }, ExoplayerFactory(this))
-        binding.videoList.offscreenPageLimit = 2
+        }, ExoplayerFactory(this), MediaSourceFactory(cache, DefaultHttpDataSource.Factory()))
         binding.videoList.adapter = adapter
         binding.videoList.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                /*
-                val previousIndex = exoPlayerItems.indexOfFirst { it.exoPlayer.isPlaying }
-                if (previousIndex != -1) {
-                    val player = exoPlayerItems[previousIndex].exoPlayer
-                    player.pause()
-                    player.playWhenReady = false
-                }
-                */
-
                 exoPlayerItems.forEach {
                     val player = it.exoPlayer
                     player.pause()

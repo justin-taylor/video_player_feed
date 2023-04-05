@@ -1,7 +1,6 @@
 package org.tayloredapps.videoplayerfeed
 
 import android.content.Context
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +8,11 @@ import android.widget.Toast
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.StreamKey
-import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.BaseMediaSource
@@ -23,32 +24,20 @@ class VideoAdapter(
     var context: Context,
     var videos: ArrayList<Video>,
     var videoPreparedListener: OnVideoPreparedListener,
-    var exoplayerFactory: ExoplayerFactory
+    var exoplayerFactory: ExoplayerFactory,
+    var mediaSourceFactory: MediaSourceFactory
 ) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
-
-    private val cacheStreamKeys = arrayListOf(
-        StreamKey(0, 1),
-        StreamKey(1, 1),
-        StreamKey(2, 1),
-        StreamKey(3, 1),
-        StreamKey(4, 1)
-    )
 
     class VideoViewHolder(
         private val binding: ViewHolderVideoPlayerBinding,
         private var context: Context,
         private var videoPreparedListener: OnVideoPreparedListener,
-        private var exoPlayer: ExoPlayer
+        private var exoPlayer: ExoPlayer,
+        private var mediaSourceFactory: MediaSourceFactory
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun setVideo(video: Video) {
-            val dataSourceFactory = DefaultHttpDataSource.Factory()
-            val mediaSource: BaseMediaSource
-            when(video.videoType) { // TODO convert to factory...
-                VideoType.HLS -> mediaSource = HlsMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(video.url))
-                VideoType.MP4 -> mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(video.url))
-            }
-            exoPlayer.setMediaSource(mediaSource)
+            exoPlayer.setMediaSource(mediaSourceFactory.build(video))
             exoPlayer.prepare()
             if (absoluteAdapterPosition == 0) {
                 exoPlayer.playWhenReady = true
@@ -76,7 +65,7 @@ class VideoAdapter(
         })
         view.playerView.player = exoPlayer
 
-        return VideoViewHolder(view, context, videoPreparedListener, exoPlayer)
+        return VideoViewHolder(view, context, videoPreparedListener, exoPlayer, mediaSourceFactory)
     }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
