@@ -2,24 +2,26 @@ package org.tayloredapps.videoplayerfeed
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
+import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
+import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource
+import com.google.android.exoplayer2.upstream.cache.CacheWriter
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import org.tayloredapps.videoplayerfeed.databinding.ActivityMainBinding
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var videos: ArrayList<Video>
 
     private lateinit var adapter: VideoAdapter
     private val exoPlayerItems = ArrayList<ExoPlayerItem>()
-
-
+    private lateinit var videoCache: SimpleCache
 
     @SuppressLint("MissingSuperCall")
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -32,19 +34,31 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        videos = GetVideoList()
 
-        val dataSourceFactory = DefaultHttpDataSource.Factory()
-        val cacheSize: Long = 90 * 1024 * 1024
-        val cacheEvictor = LeastRecentlyUsedCacheEvictor(cacheSize)
-        val exoplayerDatabaseProvider = StandaloneDatabaseProvider(this)
-        val cache = SimpleCache(cacheDir, cacheEvictor, exoplayerDatabaseProvider)
+        var dataSourceFactory = DefaultHttpDataSource.Factory()
+        var cacheSize: Long = 500 * 1024 * 1024
+        var cacheEvictor = LeastRecentlyUsedCacheEvictor(cacheSize)
+        var exoplayerDatabaseProvider = StandaloneDatabaseProvider(this)
 
+        videoCache = SimpleCache(cacheDir, cacheEvictor, exoplayerDatabaseProvider)
+        var cacheDataSourceFactory = CacheDataSource.Factory()
+            .setCache(videoCache)
+            .setUpstreamDataSourceFactory(dataSourceFactory)
+            .setCacheWriteDataSinkFactory(null)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
+        var videos = GetVideoList()
+        var playerFactory = ExoplayerFactory(this)
+        var mediaSourceFactory = VideoMediaSourceFactory(cacheDataSourceFactory)
         adapter = VideoAdapter(this, videos, object : VideoAdapter.OnVideoPreparedListener {
             override fun onVideoPrepared(exoPlayerItem: ExoPlayerItem) {
+                var index = exoPlayerItems.indexOfFirst { it.position == exoPlayerItem.position }
+                if(index != -1) {
+                    exoPlayerItems.removeAt(index)
+                }
                 exoPlayerItems.add(exoPlayerItem)
             }
-        }, ExoplayerFactory(this), MediaSourceFactory(cache, DefaultHttpDataSource.Factory()))
+        }, playerFactory, mediaSourceFactory)
         binding.videoList.adapter = adapter
         binding.videoList.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -95,5 +109,6 @@ class MainActivity : AppCompatActivity() {
                 player.clearMediaItems()
             }
         }
+        videoCache.release()
     }
 }

@@ -17,19 +17,18 @@ class VideoAdapter(
     var videos: ArrayList<Video>,
     var videoPreparedListener: OnVideoPreparedListener,
     var exoplayerFactory: ExoplayerFactory,
-    var mediaSourceFactory: MediaSourceFactory
+    var mediaSourceFactory: VideoMediaSourceFactory
 ) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
 
     class VideoViewHolder(
-        private val binding: ViewHolderVideoPlayerBinding,
-        private var context: Context,
+        binding: ViewHolderVideoPlayerBinding,
         private var videoPreparedListener: OnVideoPreparedListener,
         private var exoPlayer: ExoPlayer,
-        private var mediaSourceFactory: MediaSourceFactory
+        private var mediaSourceFactory: VideoMediaSourceFactory
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun setVideo(video: Video) {
-            exoPlayer.setMediaSource(mediaSourceFactory.build(video))
+            exoPlayer.setMediaSource(mediaSourceFactory.createMediaSource(video))
             exoPlayer.prepare()
             if (absoluteAdapterPosition == 0) {
                 exoPlayer.playWhenReady = true
@@ -57,7 +56,7 @@ class VideoAdapter(
         })
         view.playerView.player = exoPlayer
 
-        return VideoViewHolder(view, context, videoPreparedListener, exoPlayer, mediaSourceFactory)
+        return VideoViewHolder(view, videoPreparedListener, exoPlayer, mediaSourceFactory)
     }
 
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {

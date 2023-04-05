@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.offline.StreamKey
 import com.google.android.exoplayer2.source.BaseMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
@@ -24,20 +25,16 @@ class ExoplayerFactory(var context: Context) {
 
 }
 
-class MediaSourceFactory(var cache: SimpleCache, var dataSourceFactory: DataSource.Factory) {
-    fun build(video: Video): BaseMediaSource {
-        val cacheDataSourceFactory = CacheDataSource.Factory()
-            .setCache(cache)
-            .setUpstreamDataSourceFactory(dataSourceFactory)
+class VideoMediaSourceFactory(var dataSourceFactory: DataSource.Factory) {
 
-        val mediaSource: BaseMediaSource
-        when(video.videoType) {
-            VideoType.HLS -> mediaSource = HlsMediaSource.Factory(cacheDataSourceFactory).createMediaSource(
-                MediaItem.fromUri(video.url))
-            VideoType.MP4 -> mediaSource = ProgressiveMediaSource.Factory(cacheDataSourceFactory)
-                .createMediaSource(MediaItem.fromUri(video.url))
+    fun createMediaSource(video: Video): BaseMediaSource {
+        var mediaItem = MediaItem.fromUri(video.url)
+        var mediaSource: BaseMediaSource = when(video.videoType) {
+            VideoType.HLS -> HlsMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(mediaItem)
+            VideoType.MP4 -> ProgressiveMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(mediaItem)
         }
         return mediaSource
     }
-
 }
