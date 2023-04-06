@@ -1,14 +1,10 @@
 package org.tayloredapps.videoplayerfeed
 
 import android.util.Log
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.offline.StreamKey
 import com.google.android.exoplayer2.source.hls.offline.HlsDownloader
-import com.google.android.exoplayer2.source.hls.playlist.HlsMultivariantPlaylist
 import com.google.android.exoplayer2.upstream.cache.Cache
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import kotlinx.coroutines.*
-import java.util.*
 
 class VideoPrefetcher(
     var cache: Cache,
@@ -35,6 +31,12 @@ class VideoPrefetcher(
         // TODO
     }
 
+    class Mp4Prefetcher(
+        cacheDataSourceFactory: CacheDataSource.Factory,
+    ) {
+
+    }
+
     class HlsPrefetcher(
         cacheDataSourceFactory: CacheDataSource.Factory,
         var cache: Cache,
@@ -43,14 +45,7 @@ class VideoPrefetcher(
 
        var downloader: HlsDownloader
        init {
-           var mediaItem = MediaItem.Builder()
-               .setUri(video.url).
-               setStreamKeys(
-                   Collections.singletonList(
-                       StreamKey(HlsMultivariantPlaylist.GROUP_INDEX_VARIANT, 0)
-                   )
-               ).build()
-           downloader = HlsDownloader(mediaItem, cacheDataSourceFactory)
+           downloader = HlsDownloader(video.mediaItem, cacheDataSourceFactory)
        }
 
         private fun cancelPreFetch() {

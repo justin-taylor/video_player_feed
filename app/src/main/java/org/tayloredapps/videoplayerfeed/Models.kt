@@ -3,11 +3,28 @@ package org.tayloredapps.videoplayerfeed
 import android.net.Uri
 import android.util.Log
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.offline.StreamKey
+import com.google.android.exoplayer2.source.hls.playlist.HlsMultivariantPlaylist
+import java.util.*
+import kotlin.collections.ArrayList
 
 enum class VideoType {
     HLS, MP4
 }
-data class Video(var url: Uri, var videoType: VideoType)
+class Video(var url: Uri, var videoType: VideoType) {
+    val mediaItem by lazy {
+        when(videoType) {
+            VideoType.MP4 -> MediaItem.fromUri(url)
+            VideoType.HLS -> MediaItem.Builder()
+                .setUri(url).setStreamKeys(
+                    Collections.singletonList(
+                        StreamKey(HlsMultivariantPlaylist.GROUP_INDEX_VARIANT, 0)
+                    )
+                ).build()
+        }
+    }
+}
 
 class ExoPlayerItem(
     var exoPlayer: ExoPlayer,
@@ -48,9 +65,10 @@ fun GetVideoList(): ArrayList<Video> {
             val videoType: VideoType
             when (extension?.lowercase()) {
                 "m3u8" -> videoType = VideoType.HLS
-                //"mp4" -> videoType = VideoType.MP4
+                "mp4" -> videoType = VideoType.MP4
                 else -> continue
             }
+
             videoList.add(Video(url, videoType))
         } catch (e: Exception) {
             Log.e("VIDEOLIST", "Error parsing URL", e)

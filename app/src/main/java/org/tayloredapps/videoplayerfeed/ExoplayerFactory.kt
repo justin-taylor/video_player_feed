@@ -2,7 +2,6 @@ package org.tayloredapps.videoplayerfeed
 
 import android.content.Context
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.offline.StreamKey
 import com.google.android.exoplayer2.source.BaseMediaSource
@@ -28,12 +27,11 @@ class ExoplayerFactory(var context: Context) {
 class VideoMediaSourceFactory(var dataSourceFactory: DataSource.Factory) {
 
     fun createMediaSource(video: Video): BaseMediaSource {
-        var mediaItem = MediaItem.fromUri(video.url)
         var mediaSource: BaseMediaSource = when(video.videoType) {
             VideoType.HLS -> HlsMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(mediaItem)
+                .createMediaSource(video.mediaItem)
             VideoType.MP4 -> ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(mediaItem)
+                .createMediaSource(video.mediaItem)
         }
         return mediaSource
     }
