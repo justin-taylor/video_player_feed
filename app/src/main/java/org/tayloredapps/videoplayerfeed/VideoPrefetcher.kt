@@ -2,8 +2,10 @@ package org.tayloredapps.videoplayerfeed
 
 import android.util.Log
 import com.google.android.exoplayer2.source.hls.offline.HlsDownloader
+import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.cache.Cache
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
+import com.google.android.exoplayer2.upstream.cache.CacheWriter
 import kotlinx.coroutines.*
 
 class VideoPrefetcher(
@@ -28,12 +30,48 @@ class VideoPrefetcher(
     }
 
     private fun prefetchMP4Video(video: Video) {
-        // TODO
+        var prefetcher = Mp4Prefetcher(cacheDataSourceFactory, video)
+        GlobalScope.launch(Dispatchers.IO){ prefetcher.prefetchVideo() }
     }
 
     class Mp4Prefetcher(
         cacheDataSourceFactory: CacheDataSource.Factory,
+        var video: Video
     ) {
+        var cacheWriter: CacheWriter
+        init {
+            var dataSpec = DataSpec(video.url)
+            var progressListener = CacheWriter.ProgressListener { requestLength, bytesCached, _ ->
+                if (bytesCached >= PRE_CACHE_SIZE) {
+                    cancelPreFetch()
+                }
+                var percentCached = bytesCached * 100.0 / requestLength
+                Log.d(TAG, "bytesCached: $bytesCached, percentCached: $percentCached")
+            }
+            cacheWriter = CacheWriter(
+                cacheDataSourceFactory.createDataSource(),
+                dataSpec,
+                null,
+                progressListener)
+        }
+
+        private fun cancelPreFetch() {
+            cacheWriter.cancel()
+        }
+
+        fun prefetchVideo() {
+            runCatching {
+                cacheWriter.cache()
+            }
+            .onFailure {
+                if(it is CancellationException || it is InterruptedException) {
+                    return@onFailure
+                }
+                Log.e(TAG,"Error: $it", it)
+            }.onSuccess {
+                Log.d(TAG,"Sucess")
+            }
+        }
 
     }
 
@@ -57,8 +95,10 @@ class VideoPrefetcher(
                 if(cache.isCached(video.url.toString(), 0, PRE_CACHE_SIZE)) {
                     return@runCatching
                 }
-                downloader.download { contentLength, bytesDownloaded, percentDownloaded ->
-                    if (bytesDownloaded >= PRE_CACHE_SIZE) cancelPreFetch()
+                downloader.download { _, bytesDownloaded, percentDownloaded ->
+                    if (bytesDownloaded >= PRE_CACHE_SIZE) {
+                        cancelPreFetch()
+                    }
                     Log.d(TAG, "bytesDownloaded: $bytesDownloaded, percentDownloaded: $percentDownloaded")
                 }
                 Log.d(TAG,"Dispatching")
@@ -66,7 +106,7 @@ class VideoPrefetcher(
                 if(it is CancellationException || it is InterruptedException) {
                     return@onFailure
                 }
-                Log.e(TAG,"Error: $it", it)
+                Log.e(TAG,"Error on ${video.url.toString()}: $it", it)
             }.onSuccess {
                 Log.d(TAG,"Sucess")
             }
