@@ -15,6 +15,12 @@ class ExoPlayerItem(
 )
 
 const val videoStrings = """
+    https://d2ufudlfb4rsg4.cloudfront.net/newsnation/mkaNi6xbb/adaptive/mkaNi6xbb_master.m3u8
+    https://d2ufudlfb4rsg4.cloudfront.net/news12/tWOR0szTg/adaptive/tWOR0szTg_master.m3u8
+    https://d2ufudlfb4rsg4.cloudfront.net/yahoofinance/VUmwcy2Sg/adaptive/VUmwcy2Sg_master.m3u8
+    https://d2ufudlfb4rsg4.cloudfront.net/abcnews/AlcpSgRDg/adaptive/AlcpSgRDg_master.m3u8
+    https://d2ufudlfb4rsg4.cloudfront.net/abcnews/Ph81WEwTg/adaptive/Ph81WEwTg_master.m3u8
+    https://d2ufudlfb4rsg4.cloudfront.net/cnn/WqRq0tkSg/adaptive/WqRq0tkSg_master.m3u8
 https://d2ufudlfb4rsg4.cloudfront.net/yahoofinance/VUmwcy2Sg/adaptive/VUmwcy2Sg_master.m3u8
 http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
 https://d2ufudlfb4rsg4.cloudfront.net/news12/tWOR0szTg/adaptive/tWOR0szTg_master.m3u8
@@ -42,7 +48,7 @@ fun GetVideoList(): ArrayList<Video> {
             val videoType: VideoType
             when (extension?.lowercase()) {
                 "m3u8" -> videoType = VideoType.HLS
-                "mp4" -> videoType = VideoType.MP4
+                //"mp4" -> videoType = VideoType.MP4
                 else -> continue
             }
             videoList.add(Video(url, videoType))
