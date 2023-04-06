@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private val exoPlayerItems = ArrayList<ExoPlayerItem>()
     private lateinit var videoCache: SimpleCache
     private lateinit var videoPrefetcher: VideoPrefetcher
+    private lateinit var videos: ArrayList<Video>
 
     @SuppressLint("MissingSuperCall")
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -36,32 +37,26 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        var context = SSLContext.getInstance("TLSv1.2")
-        context.init(null, null, null)
-        context.createSSLEngine()
-
-
-
         supportActionBar?.hide()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         // Build the Cache
-        var dataSourceFactory = DefaultHttpDataSource.Factory()
+        val dataSourceFactory = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true)
 
-        var cacheSize: Long = 500 * 1024 * 1024 // 500 mb
-        var cacheEvictor = LeastRecentlyUsedCacheEvictor(cacheSize)
-        var exoplayerDatabaseProvider = StandaloneDatabaseProvider(this)
+        val cacheSize: Long = 500 * 1024 * 1024 // 500 mb
+        val cacheEvictor = LeastRecentlyUsedCacheEvictor(cacheSize)
+        val exoplayerDatabaseProvider = StandaloneDatabaseProvider(this)
 
         // first ensure cache is clear on startup
         SimpleCache.delete(cacheDir, exoplayerDatabaseProvider)
         videoCache = SimpleCache(cacheDir, cacheEvictor, exoplayerDatabaseProvider)
 
         // Build the CacheDataSourceFactory
-        var cacheWriteDataSinkFactory = CacheDataSink.Factory().setCache(videoCache)
-        var cacheReadDataSourceFactory = FileDataSource.Factory()
-        var cacheDataSourceFactory = CacheDataSource.Factory()
+        val cacheWriteDataSinkFactory = CacheDataSink.Factory().setCache(videoCache)
+        val cacheReadDataSourceFactory = FileDataSource.Factory()
+        val cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(videoCache)
             .setUpstreamDataSourceFactory(dataSourceFactory)
             .setCacheReadDataSourceFactory(cacheReadDataSourceFactory)
@@ -76,19 +71,22 @@ class MainActivity : AppCompatActivity() {
                 }
             })
 
-        // Initial Video Prefetch
+        // Initial Video Prefetch of first 10 items
         videoPrefetcher = VideoPrefetcher(videoCache, cacheDataSourceFactory)
-        var videos = GetVideoList()
-        videos.forEach {
-            videoPrefetcher.prefetchVideo(it)
+        videos = GetVideoList()
+        IntRange(0, 10).forEach {
+            if(it >= videos.size) {
+                return@forEach
+            }
+            videoPrefetcher.prefetchVideo(videos[it])
         }
 
         // Build VideoAdapter
-        var playerFactory = ExoplayerFactory(this)
-        var mediaSourceFactory = VideoMediaSourceFactory(cacheDataSourceFactory)
+        val playerFactory = ExoplayerFactory(this)
+        val mediaSourceFactory = VideoMediaSourceFactory(cacheDataSourceFactory)
         adapter = VideoAdapter(this, videos, object : VideoAdapter.OnVideoPreparedListener {
             override fun onVideoPrepared(exoPlayerItem: ExoPlayerItem) {
-                var index = exoPlayerItems.indexOfFirst { it.position == exoPlayerItem.position }
+                val index = exoPlayerItems.indexOfFirst { it.position == exoPlayerItem.position }
                 if(index != -1) {
                     exoPlayerItems.removeAt(index)
                 }
@@ -97,6 +95,9 @@ class MainActivity : AppCompatActivity() {
         }, playerFactory, mediaSourceFactory)
         binding.videoList.adapter = adapter
         binding.videoList.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+
+            var previousPage: Int = 0
+
             override fun onPageSelected(position: Int) {
                 exoPlayerItems.forEach {
                     val player = it.exoPlayer
@@ -111,7 +112,17 @@ class MainActivity : AppCompatActivity() {
                     player.play()
                 }
 
-                // TODO Prefetch next items
+                val videoRange: IntRange = if(previousPage < position) { // Scrolling forward
+                    IntRange(position+1, position+10)
+                } else {
+                    IntRange(position-1, position-10)
+                }
+                videoRange.forEach{
+                    if(it >= videos.size) {
+                        return@forEach
+                    }
+                }
+                previousPage = position
             }
         })
     }

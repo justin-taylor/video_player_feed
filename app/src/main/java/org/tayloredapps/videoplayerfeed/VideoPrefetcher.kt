@@ -7,6 +7,7 @@ import com.google.android.exoplayer2.upstream.cache.Cache
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheWriter
 import kotlinx.coroutines.*
+import java.io.InterruptedIOException
 
 class VideoPrefetcher(
     var cache: Cache,
@@ -64,7 +65,7 @@ class VideoPrefetcher(
                 cacheWriter.cache()
             }
             .onFailure {
-                if(it is CancellationException || it is InterruptedException) {
+                if(it is CancellationException || it is InterruptedException || it is InterruptedIOException) {
                     return@onFailure
                 }
                 Log.e(TAG,"Error: $it", it)
