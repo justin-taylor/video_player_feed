@@ -49,6 +49,8 @@ all video fetched by the exoplayer instances, not just the `VideoPrefetcher`.
 * Setup a way for the `VideoPrefetcher` and `VideoAdapter` to evict videos that are invalid
 * Use a class of the LifecycleObserver to handle pausing/playing videos when the application is placed into the background
 * Generate a preview thumbnail using cached video data
+* Adjust the `LoadControl` settings for faster playback startup
+* Use a custom http client to manage the connect for downloads
 * Migrate from multiple exoplayer instances in the viewpager to single instance
     attached to the view when scrolled. This would be reliant on generating a
     preview thumbnail to give the appearance to users of a ready video
