@@ -38,7 +38,6 @@ const val videoStrings = """
     https://d2ufudlfb4rsg4.cloudfront.net/abcnews/AlcpSgRDg/adaptive/AlcpSgRDg_master.m3u8
     https://d2ufudlfb4rsg4.cloudfront.net/abcnews/Ph81WEwTg/adaptive/Ph81WEwTg_master.m3u8
     https://d2ufudlfb4rsg4.cloudfront.net/cnn/WqRq0tkSg/adaptive/WqRq0tkSg_master.m3u8
-    https://d2ufudlfb4rsg4.cloudfront.net/yahoofinance/VUmwcy2Sg/adaptive/VUmwcy2Sg_master.m3u8
     https://d2ufudlfb4rsg4.cloudfront.net/news12/t6k1e6XRg/adaptive/t6k1e6XRg_master.m3u8
     http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4
     http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4

@@ -121,6 +121,7 @@ class MainActivity : AppCompatActivity() {
                     if(it >= videos.size) {
                         return@forEach
                     }
+                    videoPrefetcher.prefetchVideo(videos.get(it))
                 }
                 previousPage = position
             }

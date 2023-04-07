@@ -31,12 +31,13 @@ class VideoPrefetcher(
     }
 
     private fun prefetchMP4Video(video: Video) {
-        var prefetcher = Mp4Prefetcher(cacheDataSourceFactory, video)
+        var prefetcher = Mp4Prefetcher(cacheDataSourceFactory, cache, video)
         GlobalScope.launch(Dispatchers.IO){ prefetcher.prefetchVideo() }
     }
 
     class Mp4Prefetcher(
         cacheDataSourceFactory: CacheDataSource.Factory,
+        var cache: Cache,
         var video: Video
     ) {
         var cacheWriter: CacheWriter
@@ -62,6 +63,9 @@ class VideoPrefetcher(
 
         fun prefetchVideo() {
             runCatching {
+                if(cache.isCached(video.url.toString(), 0, PRE_CACHE_SIZE)) {
+                    return@runCatching
+                }
                 cacheWriter.cache()
             }
             .onFailure {
@@ -73,7 +77,6 @@ class VideoPrefetcher(
                 Log.d(TAG,"Sucess")
             }
         }
-
     }
 
     class HlsPrefetcher(
